@@ -11,7 +11,6 @@ import {
 } from 'chart.js'
 import { Bar, Pie } from 'react-chartjs-2'
 import eventsData from './events.json'
-import './App.css'
 
 // Register ChartJS components
 ChartJS.register(
@@ -84,15 +83,17 @@ function App() {
   }
 
   return (
-    <div className="chart-container">
-      <h1>Event Analysis Dashboard</h1>
-      <div className="charts">
-        <div className="chart">
-          <h2>Bar Chart</h2>
+    <div className="max-w-7xl mx-auto p-8">
+      <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+        Event Analysis Dashboard
+      </h1>
+      <div className="flex flex-wrap gap-8 justify-center">
+        <div className="flex-1 min-w-[300px] max-w-[500px] p-6 bg-white rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">Bar Chart</h2>
           <Bar data={barChartData} options={options} />
         </div>
-        <div className="chart">
-          <h2>Pie Chart</h2>
+        <div className="flex-1 min-w-[300px] max-w-[500px] p-6 bg-white rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">Pie Chart</h2>
           <Pie data={pieChartData} options={options} />
         </div>
       </div>
