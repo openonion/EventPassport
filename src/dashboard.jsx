@@ -14,6 +14,7 @@ import {
 } from 'chart.js'
 import { Radar } from 'react-chartjs-2'
 import eventsData from './events.json'
+import { useNavigate } from 'react-router-dom'
 
 ChartJS.register(
   CategoryScale,
@@ -28,14 +29,93 @@ ChartJS.register(
   Legend
 )
 
+const AVAILABLE_ACHIEVEMENTS = [
+  {
+    id: 'rising_star_soft',
+    title: 'Rising Star (Soft Skills)',
+    description: "You've excelled significantly in at least one soft skill.",
+    badge: '⭐',
+    condition: (allSoftSkills) => Object.values(allSoftSkills).some(score => score >= 10),
+    conditionDescription: 'Achieve a score of ≥10 in at least one soft skill.'
+  },
+  {
+    id: 'tech_guru_hard',
+    title: 'Tech Guru (Hard Skills)',
+    description: "You've become highly proficient in at least one hard skill.",
+    badge: '💻',
+    condition: (allSoftSkills, allHardSkills) => Object.values(allHardSkills).some(score => score >= 10),
+    conditionDescription: 'Achieve a score of ≥10 in at least one hard skill.'
+  },
+  {
+    id: 'event_enthusiast',
+    title: 'Event Enthusiast',
+    description: "You've actively participated in many learning events.",
+    badge: '🏆',
+    condition: (allSoftSkills, allHardSkills, data) => data.events && data.events.length > 5,
+    conditionDescription: 'Attend more than 5 events.'
+  },
+  {
+    id: 'soft_skill_master',
+    title: 'Soft Skill Master',
+    description: 'Become proficient (score ≥15) in at least one soft skill.',
+    badge: '🌱',
+    condition: (allSoftSkills) => Object.values(allSoftSkills).some(score => score >= 15),
+    conditionDescription: 'Achieve a score of ≥15 in at least one soft skill.'
+  },
+  {
+    id: 'hard_skill_master',
+    title: 'Hard Skill Master',
+    description: 'Become proficient (score ≥15) in at least one hard skill.',
+    badge: '🔧',
+    condition: (allSoftSkills, allHardSkills) => Object.values(allHardSkills).some(score => score >= 15),
+    conditionDescription: 'Achieve a score of ≥15 in at least one hard skill.'
+  },
+  {
+    id: '100_hours_spent',
+    title: 'Marathon Learner',
+    description: 'Spent 100+ hours in events.',
+    badge: '⏰',
+    condition: () => false, // placeholder
+    conditionDescription: 'Accumulate more than 100 hours spent in events.'
+  },
+  {
+    id: '50_socials_attended',
+    title: 'Social Butterfly',
+    description: 'Attended 50+ socials in events.',
+    badge: '🎉',
+    condition: () => false, // placeholder
+    conditionDescription: 'Attend over 50 social events.'
+  },
+  {
+    id: '5_team_leads',
+    title: 'Team Leader',
+    description: 'Led a team in 5+ events.',
+    badge: '👑',
+    condition: () => false, // placeholder
+    conditionDescription: 'Lead a team in more than 5 events.'
+  },
+  {
+    id: '10_academic_events',
+    title: 'Academic Achiever',
+    description: 'Completed 10+ academic development events.',
+    badge: '🎓',
+    condition: () => false, // placeholder
+    conditionDescription: 'Complete at least 10 academic development events.'
+  }
+]
+
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [topSoftSkills, setTopSoftSkills] = useState({ labels: [], data: [] })
   const [topHardSkills, setTopHardSkills] = useState({ labels: [], data: [] })
   const [topEvents, setTopEvents] = useState([])
+  const [allSoftSkills, setAllSoftSkills] = useState({})
+  const [allHardSkills, setAllHardSkills] = useState({})
 
   useEffect(() => {
-    const allSoftSkills = {}
-    const allHardSkills = {}
+    const localSoftSkills = {}
+    const localHardSkills = {}
+
     const enrichedEvents = eventsData.events.map(event => {
       const totalImprovement = Object.values(event.skill_improvement_scores || {})
         .reduce((acc, val) => acc + val, 0)
@@ -44,7 +124,7 @@ const Dashboard = () => {
       if (event.softskills) {
         event.softskills.forEach(skill => {
           const score = event.skill_improvement_scores?.[skill] || 1
-          allSoftSkills[skill] = (allSoftSkills[skill] || 0) + score
+          localSoftSkills[skill] = (localSoftSkills[skill] || 0) + score
         })
       }
 
@@ -52,7 +132,7 @@ const Dashboard = () => {
       if (event.hardskills) {
         event.hardskills.forEach(skill => {
           const score = event.skill_improvement_scores?.[skill] || 1
-          allHardSkills[skill] = (allHardSkills[skill] || 0) + score
+          localHardSkills[skill] = (localHardSkills[skill] || 0) + score
         })
       }
 
@@ -65,12 +145,12 @@ const Dashboard = () => {
     setTopEvents(topThree)
 
     // Sort and pick top 5 soft skills
-    const sortedSoft = Object.entries(allSoftSkills)
+    const sortedSoft = Object.entries(localSoftSkills)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
 
     // Sort and pick top 5 hard skills
-    const sortedHard = Object.entries(allHardSkills)
+    const sortedHard = Object.entries(localHardSkills)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
 
@@ -83,6 +163,9 @@ const Dashboard = () => {
       labels: sortedHard.map(([skill]) => skill),
       data: sortedHard.map(([, score]) => score),
     })
+
+    setAllSoftSkills(localSoftSkills)
+    setAllHardSkills(localHardSkills)
   }, [])
 
   const radarOptions = {
@@ -140,12 +223,25 @@ const Dashboard = () => {
     ],
   }
 
+  const handleAICoachClick = () => {
+    // Redirect user to premium upgrade page or handle logic
+    navigate('/upgrade') 
+  }
+
   return (
     <div className="max-w-7xl mx-auto p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+      <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">
         Student Skill Dashboard
       </h1>
-
+      <div className="flex justify-center mb-8">
+        <button
+          onClick={handleAICoachClick}
+          className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 text-white font-bold py-2 px-6 rounded-full hover:shadow-xl hover:scale-105 transition-transform"
+        >
+          Try AI Coach (Go Premium)
+        </button>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Top Soft Skills Radar Chart */}
         <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
@@ -188,6 +284,38 @@ const Dashboard = () => {
               </ul>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Achievements Section */}
+      <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-2xl font-semibold text-gray-700 mb-6 text-center">Achievements</h2>
+        <div className="grid sm:grid-cols-1 md:grid-cols-3 gap-6">
+          {AVAILABLE_ACHIEVEMENTS.map((ach, index) => {
+            const isEarned = ach.condition(allSoftSkills, allHardSkills, eventsData)
+            return (
+              <div 
+                key={index} 
+                className={`flex flex-col items-center p-6 rounded-lg shadow-md transition-all 
+                ${isEarned ? 'bg-green-50 border border-green-200' : 'bg-gray-100 border border-gray-200'}`}
+              >
+                <div className="text-4xl mb-4">
+                  {isEarned ? ach.badge : '🔒'}
+                </div>
+                <h3 className={`font-bold text-xl mb-2 ${isEarned ? 'text-gray-800' : 'text-gray-600'}`}>
+                  {ach.title}
+                </h3>
+                <p className={`text-center mb-2 ${isEarned ? 'text-gray-700' : 'text-gray-500'}`}>
+                  {ach.description}
+                </p>
+                {!isEarned && (
+                  <p className="text-center italic text-gray-500 text-sm mt-2">
+                    How to unlock: {ach.conditionDescription}
+                  </p>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
 
