@@ -20,6 +20,7 @@ import {
 } from 'chart.js'
 import Dashboard from './dashboard'
 import { Login } from './login'
+import Resume from './resume'
 
 // Registering chart components
 ChartJS.register(
@@ -60,6 +61,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/resume" 
+          element={
+            <ProtectedRoute>
+              <Resume />
             </ProtectedRoute>
           } 
         />
